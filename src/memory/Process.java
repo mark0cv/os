@@ -83,7 +83,7 @@ public class Process extends Thread {
     public void run() {
      /*   try {
             AsmHandler asmHandler = new AsmHandler();
-            DMAController.fromDiskToRam(this);
+            ScanController.fromDiskToRam(this);
 
             // Proveri da li ima slobodnih particija u RAM-u pre nego što proces počne
             if (!hasEnoughRamSpace()) {
@@ -104,7 +104,7 @@ public class Process extends Thread {
 
             // Ako je potrebno, sačuvaj rezultat na disk
             if (this.save) {
-                DMAController.fromRamToDisk(this);
+                ScanController.fromRamToDisk(this);
             }
         } catch (Exception e) {
             System.err.println("Greška u izvršavanju procesa: " + e.getMessage());
