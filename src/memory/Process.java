@@ -4,7 +4,7 @@ package memory;
 //import system.ProcessScheduler;
 //import system.ProcessState;
 //import system.ShellCommands;
-
+//import static memory.ScanController.freeRamResources; //pogledaj u ScanController.java
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -18,6 +18,8 @@ public class Process extends Thread {
     private String saveFileName;
     private ArrayList<String> instructions = new ArrayList<>();
     private int idProces;
+    private int partitionId;
+    private String resultString;
 
     public Process(String filePath, int id) {
         this.processName = filePath;
@@ -77,6 +79,17 @@ public class Process extends Thread {
         return this.processName;
     }
 
+    public void setPartitionId(int partitionId) {
+        this.partitionId = partitionId;
+    }
+
+    public int getPartitionId() {
+        return partitionId;
+    }
+    
+    public String getResultString() {
+        return resultString;
+    }
 
 
     @Override
@@ -96,6 +109,7 @@ public class Process extends Thread {
 
             // Oslobađanje RAM-a nakon završetka procesa
             freeRamResources();
+            //freeRamResources(this); //mozda treba dodati ili popraviti jos nesto u funkciji?
 
             if (this.state == ProcessState.DONE) {
                 ShellCommands.threadSet.remove(this); // Ukloni proces iz seta aktivnih niti
@@ -105,6 +119,7 @@ public class Process extends Thread {
             // Ako je potrebno, sačuvaj rezultat na disk
             if (this.save) {
                 ScanController.fromRamToDisk(this);
+                // ScanController.saveProcessToDisk(this);
             }
         } catch (Exception e) {
             System.err.println("Greška u izvršavanju procesa: " + e.getMessage());
