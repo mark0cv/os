@@ -76,20 +76,7 @@ public class ScanController {
             throw new RuntimeException(e);
         }
     }*/
-
-    public static void freeRamResources(Process process) {
-        Ram ram = Ram.getInstance();
-        int partitionId = process.getPartitionId();
-
-        for (FixedPartition partition : ram.getPartitions()) {
-            if (partition.getPartitionId() == partitionId) {
-                partition.free();
-                System.out.println("Freed partition " + partitionId + " from process '" + process.getProcessName() + "'");
-                break;
-            }
-        }
-    }
-
+    
     private static void executeScan() {
         int currentPosition = 0;
         boolean movingRight = true;
