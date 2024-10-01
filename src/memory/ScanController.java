@@ -13,59 +13,52 @@ import java.util.List;
 public class ScanController {
 
     private static List<DiskRequest> requestQueue = new LinkedList<>();
-
-    public static void fromDiskToRam(Process process) {
+    
+    public static void loadProcessIntoRam(Process process) {
         try {
             process.setInstructions((ArrayList<String>) Files.readAllLines(Paths.get(process.getFilePath())));
         } catch (IOException e) {
             System.err.println("Error reading ASM file: " + e.getMessage());
         }
 
-        process.setNumOfPages(process.getInstructions().size() / Page.SIZE);
-        int br = 0;
+        Ram ram = Ram.getInstance();
+        boolean allocated = false;
 
-        for (int i = 0; i < process.getNumOfPages(); i++) {
-            Page p = new Page(i, process.getProcessName());
-            int x = 0;
+        for (FixedPartition partition : ram.getPartitions()) {
+            if (!partition.isOccupied()) {
 
-            while (x < Page.SIZE) {
-                if (br < process.getInstructions().size())
-                    p.getContent().add(process.getInstructions().get(br));
-                x++;
-                br++;
-            }
-
-            for (int j = 0; j < Ram.NumOfFrames; j++) {
-                if (Ram.frames[j] == 0) {
-                    Ram.frames[j] = 1;
-                    Ram.memory.put(j, p);
-                    process.getPageTable().put(i, j);
-                    break;
-                }
+                partition.allocate(process.getProcessName(), process.getInstructions());
+                System.out.println("Allocated process " + process.getProcessName() + " to partition " + partition.getPartitionId());
+                process.setPartitionId(partition.getPartitionId());
+                allocated = true;
+                break;
             }
         }
+
+        if (!allocated) {
+            System.err.println("No available partition for process: " + process.getProcessName());
+        }
     }
-
-    public static void fromRamToDisk(Process process) {
+    //metod treba funkcionisati sa ShellCommands.java
+   /* public static void saveProcessToDisk(Process process) {
         try {
-
             File newFile = new File(ShellCommands.getCurrentDir() + "\\" + process.getSaveFileName() + ".txt");
             if (!newFile.exists()) {
 
-                for (FileInMemory f : Disc.listaFile) {
+                for (FileInMemory f : Disc.listOfFiles) {
                     if (f.getName().equals(ShellCommands.trenutniDirNaziv)) {
                         FileInMemory fim = new FileInMemory(process.getSaveFileName(), 1, f);
-                        Disc.listaFile.add(fim);
-                        f.getPodfajlovi().add(fim);
+                        Disc.listOfFiles.add(fim);
+                        f.getChildrenFiles().add(fim);
                         newFile.createNewFile();
 
                         try (FileWriter fw = new FileWriter(newFile)) {
-                            String message = "Rezultat izvrsavanja: " + process.getRezultat();
+                            String message = "Rezultat izvrsavanja: " + process.getResultString();
                             fw.write(message);
                         }
 
                         ArrayList<String> contentList = new ArrayList<>();
-                        contentList.add("Rezultat izvrsavanja: " + process.getRezultat());
+                        contentList.add("Rezultat izvrsavanja: " + process.getResultString());
                         fim.setContent(contentList);
 
                         requestQueue.add(new DiskRequest(fim, newFile));
@@ -81,6 +74,19 @@ public class ScanController {
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }*/
+
+    public static void freeRamResources(Process process) {
+        Ram ram = Ram.getInstance();
+        int partitionId = process.getPartitionId();
+
+        for (FixedPartition partition : ram.getPartitions()) {
+            if (partition.getPartitionId() == partitionId) {
+                partition.free();
+                System.out.println("Freed partition " + partitionId + " from process '" + process.getProcessName() + "'");
+                break;
+            }
         }
     }
 
