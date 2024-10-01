@@ -4,7 +4,7 @@ package memory;
 //import system.ProcessScheduler;
 //import system.ProcessState;
 //import system.ShellCommands;
-//import static memory.ScanController.freeRamResources; //pogledaj u ScanController.java
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -135,7 +135,18 @@ public class Process extends Thread {
         }
         return false;
     }
+     public static void freeRamResources(Process process) {
+        Ram ram = Ram.getInstance();
+        int partitionId = process.getPartitionId();
 
+        for (FixedPartition partition : ram.getPartitions()) {
+            if (partition.getPartitionId() == partitionId) {
+                partition.free();
+                System.out.println("Freed partition " + partitionId + " from process '" + process.getProcessName() + "'");
+                break;
+            }
+        }
+    }
 
     @Override
     public String toString() {
